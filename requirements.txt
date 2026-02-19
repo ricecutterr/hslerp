@@ -1,0 +1,12 @@
+flask==3.1.0
+flask-login==0.6.3
+flask-sqlalchemy==3.1.1
+flask-admin==1.6.1
+wtforms==3.2.1
+requests==2.32.3
+gunicorn==23.0.0
+apscheduler==3.10.4
+openpyxl==3.1.5
+google-auth==2.37.0
+google-auth-oauthlib==1.2.1
+google-api-python-client==2.159.0
