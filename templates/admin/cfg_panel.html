@@ -1,0 +1,678 @@
+{% extends 'admin/layout.html' %}
+{% block title %}Admin Configurator - HSL ERP{% endblock %}
+{% block head %}
+<style>
+.nav-tabs .nav-link{font-weight:500;color:#1D2F34}.nav-tabs .nav-link.active{background:#1D2F34;color:white;border-color:#1D2F34}
+.table th{background:#1D2F34;color:white;font-weight:500;font-size:.85rem}
+.table td{vertical-align:middle;font-size:.9rem}
+.table tbody tr{transition:all .15s;cursor:pointer;border-left:4px solid transparent}
+.table tbody tr:hover{background:#e8f5e0 !important}
+.table tbody tr.selected{background:#c5e1a5 !important;border-left:4px solid #61993B;font-weight:500}
+.table tbody tr.selected td{color:#1D2F34}
+.toolbar{background:white;border-radius:8px;padding:10px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.modal-header{background:#1D2F34;color:white}.modal-header .btn-close{filter:invert(1)}
+.card-panel{background:white;border-radius:12px;box-shadow:0 2px 8px rgba(0,0,0,.08);overflow:hidden}
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <h2><i class="bi bi-sliders me-2"></i>Admin Configurator</h2>
+    <a href="/configurator" class="btn btn-hsl"><i class="bi bi-gear me-1"></i>Deschide Configurator</a>
+</div>
+
+<div class="card-panel">
+<ul class="nav nav-tabs" id="adminTabs">
+<li class="nav-item"><a class="nav-link active" data-bs-toggle="tab" href="#tab-produse">Produse</a></li>
+<li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-accesorii">Accesorii și Opțiuni</a></li>
+<li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-cat-acc">Categorii Accesorii</a></li>
+<li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-cat-prod">Categorii Produse</a></li>
+<li class="nav-item"><a class="nav-link" data-bs-toggle="tab" href="#tab-setari">Setări</a></li>
+</ul>
+<div class="tab-content p-3">
+
+<!-- TAB PRODUSE -->
+<div class="tab-pane fade show active" id="tab-produse">
+<div class="toolbar d-flex gap-2 flex-wrap">
+<button class="btn btn-hsl btn-sm" onclick="produse.add()">➕ Adaugă Produs</button>
+<button class="btn btn-outline-secondary btn-sm" onclick="produse.edit()">✏️ Editează</button>
+<button class="btn btn-outline-danger btn-sm" onclick="produse.del()">🗑️ Șterge</button>
+<button class="btn btn-outline-primary btn-sm" onclick="produse.load()">🔄</button>
+<span class="ms-auto text-muted small align-self-center" id="produse-count"></span>
+</div>
+<div class="table-responsive" style="max-height:65vh;overflow-y:auto">
+<table class="table table-sm table-hover mb-0"><thead><tr>
+<th width="40">#</th><th>Cod</th><th>Denumire</th><th>Preț</th><th>UM</th><th>Descriere</th>
+</tr></thead><tbody id="produse-body"></tbody></table></div>
+</div>
+
+<!-- TAB ACCESORII -->
+<div class="tab-pane fade" id="tab-accesorii">
+<div class="toolbar d-flex gap-2 flex-wrap">
+<button class="btn btn-hsl btn-sm" onclick="accesorii.add()">➕ Adaugă Accesoriu/Opțiune</button>
+<button class="btn btn-outline-secondary btn-sm" onclick="accesorii.edit()">✏️ Editează</button>
+<button class="btn btn-outline-danger btn-sm" onclick="accesorii.del()">🗑️ Șterge</button>
+<button class="btn btn-outline-primary btn-sm" onclick="accesorii.load()">🔄</button>
+</div>
+<div class="table-responsive" style="max-height:65vh;overflow-y:auto">
+<table class="table table-sm table-hover mb-0"><thead><tr>
+<th width="40">#</th><th>Cod</th><th>Denumire</th><th>Tip</th><th>Mod Preț</th><th>Preț</th><th>UM</th>
+</tr></thead><tbody id="accesorii-body"></tbody></table></div>
+</div>
+
+<!-- TAB CATEGORII ACCESORII -->
+<div class="tab-pane fade" id="tab-cat-acc">
+<div class="toolbar d-flex gap-2">
+<button class="btn btn-hsl btn-sm" onclick="catAcc.add()">➕ Adaugă</button>
+<button class="btn btn-outline-secondary btn-sm" onclick="catAcc.edit()">✏️ Editează</button>
+<button class="btn btn-outline-danger btn-sm" onclick="catAcc.del()">🗑️ Șterge</button>
+<button class="btn btn-outline-secondary btn-sm" onclick="catAcc.move(-1)">▲</button>
+<button class="btn btn-outline-secondary btn-sm" onclick="catAcc.move(1)">▼</button>
+<button class="btn btn-outline-primary btn-sm" onclick="catAcc.load()">🔄</button>
+</div>
+<div class="table-responsive"><table class="table table-sm table-hover mb-0"><thead><tr>
+<th width="60">Ordine</th><th>Nume</th><th>Descriere</th><th>Nr. Accesorii</th>
+</tr></thead><tbody id="cat-acc-body"></tbody></table></div>
+</div>
+
+<!-- TAB CATEGORII PRODUSE -->
+<div class="tab-pane fade" id="tab-cat-prod">
+<div class="toolbar d-flex gap-2">
+<button class="btn btn-hsl btn-sm" onclick="catProd.add()">➕ Adaugă</button>
+<button class="btn btn-outline-secondary btn-sm" onclick="catProd.edit()">✏️ Editează</button>
+<button class="btn btn-outline-danger btn-sm" onclick="catProd.del()">🗑️ Șterge</button>
+<button class="btn btn-outline-secondary btn-sm" onclick="catProd.move(-1)">▲</button>
+<button class="btn btn-outline-secondary btn-sm" onclick="catProd.move(1)">▼</button>
+<button class="btn btn-outline-primary btn-sm" onclick="catProd.load()">🔄</button>
+</div>
+<div class="table-responsive"><table class="table table-sm table-hover mb-0"><thead><tr>
+<th width="60">Ordine</th><th>Nume</th><th>Descriere</th><th>Nr. Produse</th>
+</tr></thead><tbody id="cat-prod-body"></tbody></table></div>
+</div>
+
+<!-- TAB SETARI -->
+<div class="tab-pane fade" id="tab-setari">
+<div class="row justify-content-center"><div class="col-md-6 py-3">
+<h5 class="fw-bold" style="color:#1D2F34">Setări Companie</h5>
+<div class="mb-3"><label class="form-label">Nume Companie</label><input id="set-name" class="form-control"></div>
+<div class="mb-3"><label class="form-label">Adresă</label><textarea id="set-addr" class="form-control" rows="2"></textarea></div>
+<div class="mb-3"><label class="form-label">Telefon</label><input id="set-phone" class="form-control"></div>
+<div class="mb-3"><label class="form-label">Email</label><input id="set-email" class="form-control"></div>
+<div class="mb-3"><label class="form-label">TVA (%)</label><input id="set-tva" class="form-control" type="number" value="19"></div>
+<button class="btn btn-hsl" onclick="setari.save()">💾 Salvează Setări</button>
+</div></div>
+</div>
+
+</div></div>
+
+<!-- MODAL GENERIC -->
+<div class="modal fade" id="editModal" tabindex="-1"><div class="modal-dialog modal-lg"><div class="modal-content">
+<div class="modal-header"><h5 class="modal-title" id="modalTitle"></h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+<div class="modal-body" id="modalBody"></div>
+<div class="modal-footer"><button class="btn btn-secondary" data-bs-dismiss="modal">Anulează</button>
+<button class="btn btn-hsl" id="modalSave">💾 Salvează</button></div>
+</div></div></div>
+
+<!-- MODAL CONFIG -->
+<div class="modal fade" id="configModal" tabindex="-1"><div class="modal-dialog modal-xl"><div class="modal-content">
+<div class="modal-header"><h5 class="modal-title" id="configTitle"></h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+<div class="modal-body" id="configBody" style="max-height:75vh;overflow-y:auto"></div>
+</div></div></div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const API = (url, opts={}) => {
+    opts.headers = {'Content-Type':'application/json', ...opts.headers};
+    if(opts.body && typeof opts.body === 'object') opts.body = JSON.stringify(opts.body);
+    return fetch(url, opts).then(r => r.json());
+};
+
+let modal, configModalEl;
+document.addEventListener('DOMContentLoaded', () => {
+    modal = new bootstrap.Modal('#editModal');
+    configModalEl = new bootstrap.Modal('#configModal');
+    produse.load(); accesorii.load(); catAcc.load(); catProd.load(); setari.load();
+});
+
+// Row selection helper
+function setupTable(tbodyId, dataArr, onSelect) {
+    const tbody = document.getElementById(tbodyId);
+    tbody.querySelectorAll('tr').forEach(tr => {
+        tr.addEventListener('click', function() {
+            tbody.querySelectorAll('tr').forEach(r => r.classList.remove('selected'));
+            this.classList.add('selected');
+            if(onSelect) onSelect(parseInt(this.dataset.idx));
+        });
+    });
+}
+function getSelectedIdx(tbodyId) {
+    const sel = document.querySelector(`#${tbodyId} tr.selected`);
+    return sel ? parseInt(sel.dataset.idx) : -1;
+}
+
+// ═══════════════════════════════════════
+// PRODUSE - exact same as desktop
+// ═══════════════════════════════════════
+const produse = {
+    data: [], sel: -1,
+    async load() {
+        this.data = await API('/api/cfg/produse');
+        const tb = document.getElementById('produse-body');
+        tb.innerHTML = this.data.map((p,i) => `<tr data-idx="${i}">
+            <td>${i+1}</td><td class="fw-bold">${p.cod}</td><td>${p.denumire}</td>
+            <td>${p.pret.toFixed(2)}</td><td>${p.um}</td><td class="text-muted small">${(p.descriere||'').substring(0,80)}</td></tr>`).join('');
+        setupTable('produse-body', this.data, i => this.sel = i);
+        document.getElementById('produse-count').textContent = `${this.data.length} produse`;
+    },
+    add() { this.showDialog(null); },
+    edit() { if(this.sel<0) return alert('Selectează un produs!'); this.showDialog(this.data[this.sel]); },
+    async del() {
+        if(this.sel<0) return alert('Selectează un produs!');
+        if(!confirm('Sigur vrei să ștergi?')) return;
+        await API(`/api/cfg/produse/${this.data[this.sel].id}`, {method:'DELETE'});
+        this.sel=-1; this.load();
+    },
+    async showDialog(p) {
+        const catProduse = await API('/api/cfg/categorii-produse');
+        const isEdit = !!p;
+        document.getElementById('modalTitle').textContent = isEdit ? 'Editează Produs' : 'Adaugă Produs';
+        const existingCats = p ? p.categories : [];
+        document.getElementById('modalBody').innerHTML = `
+            <div class="row">
+            <div class="col-md-6 mb-3"><label class="form-label">Cod Produs</label><input id="p-cod" class="form-control" value="${p?p.cod:''}"></div>
+            <div class="col-md-6 mb-3"><label class="form-label">Preț (EUR)</label><input id="p-pret" class="form-control" type="number" step="0.01" value="${p?p.pret:0}"></div>
+            </div>
+            <div class="mb-3"><label class="form-label">Denumire</label><input id="p-den" class="form-control" value="${p?p.denumire:''}"></div>
+            <div class="row">
+            <div class="col-md-4 mb-3"><label class="form-label">UM</label><select id="p-um" class="form-select">
+                ${['buc','mp','ml','set'].map(u=>`<option ${p&&p.um===u?'selected':''}>${u}</option>`).join('')}</select></div>
+            </div>
+            <div class="mb-3"><label class="form-label">Descriere</label><textarea id="p-desc" class="form-control" rows="3">${p?p.descriere||'':''}</textarea></div>
+            <div class="mb-3"><label class="form-label fw-bold">Categorii Produse</label>
+            ${catProduse.length ? catProduse.map(c => `<div class="form-check">
+                <input class="form-check-input p-cat-check" type="checkbox" value="${c.id}" id="pcat${c.id}" ${existingCats.includes(c.id)?'checked':''}>
+                <label class="form-check-label" for="pcat${c.id}">${c.nume}</label></div>`).join('')
+                : '<p class="text-muted">Creează categorii în tab Categorii Produse</p>'}
+            </div>
+            <hr>
+            <div class="d-flex gap-2">
+            <button class="btn btn-outline-primary btn-sm" onclick="produse.openConfig(${p?p.id:0})">⚙ Configurează Parametri</button>
+            <button class="btn btn-outline-primary btn-sm" onclick="produse.openVariants(${p?p.id:0})">📋 Gestionează Variante</button>
+            </div>`;
+        document.getElementById('modalSave').onclick = async () => {
+            const cats = [...document.querySelectorAll('.p-cat-check:checked')].map(c=>parseInt(c.value));
+            const data = {cod:document.getElementById('p-cod').value, denumire:document.getElementById('p-den').value,
+                pret:parseFloat(document.getElementById('p-pret').value)||0, um:document.getElementById('p-um').value,
+                descriere:document.getElementById('p-desc').value, categories:cats};
+            if(isEdit) await API(`/api/cfg/produse/${p.id}`,{method:'PUT',body:data});
+            else await API('/api/cfg/produse',{method:'POST',body:data});
+            modal.hide(); this.sel=-1; this.load();
+        };
+        modal.show();
+    },
+    async openConfig(pid) {
+        if(!pid){alert('Salvează produsul mai întâi!'); return;}
+        modal.hide();
+        const cfg = await API(`/api/cfg/produse/${pid}/config`);
+        const params = cfg.parameter_types || [];
+        document.getElementById('configTitle').textContent = 'Configurare Parametri Produs';
+        let html = `<div class="mb-3">
+            <div class="d-flex gap-2 mb-3">
+                <button class="btn btn-hsl btn-sm" onclick="produse.addParam(${pid})">➕ Adaugă Parametru</button>
+                <button class="btn btn-outline-danger btn-sm" onclick="produse.delParam(${pid})">🗑️ Șterge Selectat</button>
+            </div>
+            <table class="table table-sm table-hover"><thead><tr>
+            <th width="40">Ord</th><th>Nume</th><th>Cheie</th><th>Tip</th><th>Mod</th><th>Valori</th><th width="60">Acțiuni</th>
+            </tr></thead><tbody id="params-body">`;
+        params.forEach((p,i) => {
+            let valDisplay = '';
+            if(p.type==='dropdown'){
+                const vals = p.values||[];
+                valDisplay = vals.map(v => typeof v === 'object' ? v.label : v).join(', ');
+            } else if(p.type==='dimension'){
+                const dims = p.predefined_dimensions||[];
+                valDisplay = dims.map(d => d.value + (d.canate ? ` (${d.canate}C)` : '')).join(', ');
+            }
+            html += `<tr data-idx="${i}" onclick="this.parentElement.querySelectorAll('tr').forEach(r=>r.classList.remove('selected'));this.classList.add('selected')">
+                <td>${i+1}</td><td>${p.name}</td><td><code>${p.key}</code></td><td>${p.type}</td><td>${p.mode||'fix'}</td>
+                <td class="small text-muted">${valDisplay.substring(0,80)}</td>
+                <td><button class="btn btn-outline-secondary btn-sm py-0" onclick="event.stopPropagation();produse.editParam(${pid},${i})">✏️</button></td></tr>`;
+        });
+        html += `</tbody></table></div>`;
+        document.getElementById('configBody').innerHTML = html;
+        configModalEl.show();
+    },
+    async addParam(pid) { this._showParamDialog(pid, null, -1); },
+    async editParam(pid, idx) {
+        const cfg = await API(`/api/cfg/produse/${pid}/config`);
+        this._showParamDialog(pid, cfg.parameter_types[idx], idx);
+    },
+    async delParam(pid) {
+        const sel = document.querySelector('#params-body tr.selected');
+        if(!sel) return alert('Selectează un parametru!');
+        const idx = parseInt(sel.dataset.idx);
+        const cfg = await API(`/api/cfg/produse/${pid}/config`);
+        cfg.parameter_types.splice(idx, 1);
+        await API(`/api/cfg/produse/${pid}/config`, {method:'PUT', body:cfg});
+        this.openConfig(pid);
+    },
+    _showParamDialog(pid, param, idx) {
+        configModalEl.hide();
+        const isEdit = param !== null;
+        document.getElementById('modalTitle').textContent = isEdit ? 'Editează Parametru' : 'Adaugă Parametru';
+        const p = param || {name:'', key:'', type:'dropdown', mode:'fix', values:[], affects_price:true};
+        
+        let valsStr = '';
+        if(p.type==='dropdown'){
+            valsStr = (p.values||[]).map(v => typeof v==='object' ? v.label : v).join('\n');
+        }
+        let dimsHtml = '';
+        if(p.type==='dimension'){
+            const dims = p.predefined_dimensions||[];
+            dimsHtml = dims.map((d,i) => `${d.value}${d.canate ? ','+d.canate : ''}`).join('\n');
+        }
+        
+        document.getElementById('modalBody').innerHTML = `
+            <div class="row">
+            <div class="col-md-6 mb-3"><label class="form-label">Nume Parametru</label><input id="pm-name" class="form-control" value="${p.name}">
+                <small class="text-muted">Ex: Rezistență la foc, Culoare</small></div>
+            <div class="col-md-6 mb-3"><label class="form-label">Cheie (fără spații)</label><input id="pm-key" class="form-control" value="${p.key}">
+                <small class="text-muted">Ex: rezistenta, culoare</small></div>
+            </div>
+            <div class="row">
+            <div class="col-md-4 mb-3"><label class="form-label">Tip</label><select id="pm-type" class="form-select" onchange="produse._onParamTypeChange()">
+                <option value="dropdown" ${p.type==='dropdown'?'selected':''}>Dropdown</option>
+                <option value="dimension" ${p.type==='dimension'?'selected':''}>Dimensiune</option></select></div>
+            <div class="col-md-4 mb-3" id="pm-mode-wrap"><label class="form-label">Mod</label><select id="pm-mode" class="form-select">
+                <option value="fix" ${p.mode==='fix'?'selected':''}>Fix (doar dropdown)</option>
+                <option value="mixt" ${p.mode==='mixt'?'selected':''}>Mixt (dropdown + custom)</option>
+                <option value="completabil" ${p.mode==='completabil'?'selected':''}>Completabil (doar text liber)</option></select>
+                <small class="text-muted">Fix=doar lista | Mixt=lista+custom | Completabil=manual</small></div>
+            <div class="col-md-4 mb-3"><label class="form-label">&nbsp;</label>
+                <div class="form-check mt-2"><input class="form-check-input" type="checkbox" id="pm-affects" ${p.affects_price!==false?'checked':''}>
+                <label class="form-check-label">Influențează prețul</label></div></div>
+            </div>
+            <div id="pm-vals-wrap" class="mb-3"><label class="form-label">Valori posibile (una per linie)</label>
+                <textarea id="pm-vals" class="form-control" rows="6">${valsStr}</textarea>
+                <small class="text-muted">Ex: EI2 60 / EI2 90 / RAL9010</small></div>
+            <div id="pm-dims-wrap" class="mb-3" style="display:${p.type==='dimension'?'block':'none'}">
+                <label class="form-label">Dimensiuni predefinite (lățimexînălțime,canate - una per linie)</label>
+                <textarea id="pm-dims" class="form-control" rows="6">${dimsHtml}</textarea>
+                <small class="text-muted">Format: 900x2100 sau 900x2100,2 (cu canate)</small>
+                <div class="form-check mt-2"><input class="form-check-input" type="checkbox" id="pm-has-canate" ${p.has_canate?'checked':''}>
+                <label class="form-check-label">Include Canate</label></div>
+                <div class="form-check"><input class="form-check-input" type="checkbox" id="pm-custom-dim" ${p.custom_dimensions!==false?'checked':''}>
+                <label class="form-check-label">Permite dimensiuni custom</label></div>
+            </div>`;
+        
+        document.getElementById('modalSave').onclick = async () => {
+            const type = document.getElementById('pm-type').value;
+            const result = {
+                name: document.getElementById('pm-name').value,
+                key: document.getElementById('pm-key').value,
+                type: type,
+                affects_price: document.getElementById('pm-affects').checked,
+            };
+            if(type === 'dropdown'){
+                result.mode = document.getElementById('pm-mode').value;
+                const valsText = document.getElementById('pm-vals').value.trim();
+                result.values = valsText ? valsText.split('\n').map(v=>v.trim()).filter(v=>v) : [];
+            } else {
+                const dimsText = document.getElementById('pm-dims').value.trim();
+                result.has_canate = document.getElementById('pm-has-canate').checked;
+                result.custom_dimensions = document.getElementById('pm-custom-dim').checked;
+                result.predefined_dimensions = dimsText ? dimsText.split('\n').map(line => {
+                    const parts = line.trim().split(',');
+                    const d = {value: parts[0]};
+                    if(parts[1]) d.canate = parts[1].trim();
+                    return d;
+                }).filter(d=>d.value) : [];
+            }
+            const cfg = await API(`/api/cfg/produse/${pid}/config`);
+            const params = cfg.parameter_types || [];
+            if(idx >= 0) params[idx] = result; else params.push(result);
+            await API(`/api/cfg/produse/${pid}/config`, {method:'PUT', body:{parameter_types:params}});
+            modal.hide(); setTimeout(()=>this.openConfig(pid), 300);
+        };
+        this._onParamTypeChange();
+        modal.show();
+    },
+    _onParamTypeChange() {
+        const t = document.getElementById('pm-type').value;
+        document.getElementById('pm-mode-wrap').style.display = t==='dropdown'?'':'none';
+        document.getElementById('pm-vals-wrap').style.display = t==='dropdown'?'':'none';
+        document.getElementById('pm-dims-wrap').style.display = t==='dimension'?'block':'none';
+    },
+    async openVariants(pid) {
+        if(!pid){alert('Salvează produsul mai întâi!'); return;}
+        modal.hide();
+        const vc = await API(`/api/cfg/produse/${pid}/variante`);
+        const cfg = await API(`/api/cfg/produse/${pid}/config`);
+        const params = cfg.parameter_types || [];
+        const varParams = vc.variant_parameters || [];
+        const variants = vc.variants || [];
+        const useVariants = vc.use_variants || false;
+
+        document.getElementById('configTitle').textContent = 'Gestionare Variante de Cod';
+        let html = `<div class="mb-3">
+            <div class="form-check mb-2"><input class="form-check-input" type="checkbox" id="vc-use" ${useVariants?'checked':''} onchange="produse._toggleVariants(${pid})">
+            <label class="form-check-label fw-bold">Activează sistem variante</label></div>
+            <div class="mb-2"><strong>Parametri care definesc varianta:</strong><br>`;
+        params.forEach(p => {
+            html += `<div class="form-check form-check-inline">
+                <input class="form-check-input vc-param" type="checkbox" value="${p.key}" ${varParams.includes(p.key)?'checked':''}>
+                <label class="form-check-label">${p.name} (${p.key})</label></div>`;
+        });
+        html += `</div><hr>
+            <div class="d-flex gap-2 mb-3">
+                <button class="btn btn-hsl btn-sm" onclick="produse.addVariant(${pid})">➕ Adaugă Variantă</button>
+                <button class="btn btn-outline-danger btn-sm" onclick="produse.delVariant(${pid})">🗑️ Șterge</button>
+                <button class="btn btn-outline-primary btn-sm" onclick="produse.saveVariants(${pid})">💾 Salvează Tot</button>
+                <span class="ms-auto text-muted small align-self-center">${variants.length} variante</span>
+            </div>
+            <div style="max-height:50vh;overflow-y:auto">
+            <table class="table table-sm table-hover"><thead><tr><th>Sufix</th><th>Cod Complet</th>`;
+        varParams.forEach(vp => { const pm = params.find(p=>p.key===vp); html += `<th>${pm?pm.name:vp}</th>`; });
+        html += `<th>Preț (EUR)</th><th width="60"></th></tr></thead><tbody id="variants-body">`;
+        
+        const prod = this.data.find(p=>p.id===pid);
+        const codBaza = prod ? prod.cod : '';
+        variants.forEach((v,i) => {
+            html += `<tr data-idx="${i}" onclick="this.parentElement.querySelectorAll('tr').forEach(r=>r.classList.remove('selected'));this.classList.add('selected')">
+                <td><code>${v.suffix}</code></td><td class="fw-bold">${codBaza}${v.suffix}</td>`;
+            varParams.forEach(vp => { html += `<td>${v.combination[vp]||''}</td>`; });
+            html += `<td class="fw-bold text-success">${v.pret.toFixed(2)}</td>
+                <td><button class="btn btn-outline-secondary btn-sm py-0" onclick="event.stopPropagation();produse.editVariant(${pid},${i})">✏️</button></td></tr>`;
+        });
+        html += `</tbody></table></div></div>`;
+        document.getElementById('configBody').innerHTML = html;
+        configModalEl.show();
+    },
+    async _toggleVariants(pid) {},
+    async addVariant(pid) { this._showVariantDialog(pid, null, -1); },
+    async editVariant(pid, idx) {
+        const vc = await API(`/api/cfg/produse/${pid}/variante`);
+        const variants = vc.variants || [];
+        if(idx >= 0 && idx < variants.length) this._showVariantDialog(pid, variants[idx], idx);
+        else alert('Variantă negăsită!');
+    },
+    async delVariant(pid) {
+        const sel = document.querySelector('#variants-body tr.selected');
+        if(!sel) return alert('Selectează o variantă!');
+        const vc = await API(`/api/cfg/produse/${pid}/variante`);
+        if(!vc.variants) vc.variants = [];
+        vc.variants.splice(parseInt(sel.dataset.idx), 1);
+        await API(`/api/cfg/produse/${pid}/variante`, {method:'PUT', body:vc});
+        this.openVariants(pid);
+    },
+    async _showVariantDialog(pid, variant, idx) {
+        configModalEl.hide();
+        const cfg = await API(`/api/cfg/produse/${pid}/config`);
+        let vc = await API(`/api/cfg/produse/${pid}/variante`);
+        const params = cfg.parameter_types || [];
+        
+        // Ensure vc has all required fields
+        if(!vc.variants) vc.variants = [];
+        if(!vc.variant_parameters) vc.variant_parameters = [];
+        
+        // Read variant_parameters from UI checkboxes first (if panel is open),
+        // then from server, then fallback to ALL params
+        const uiChecked = [...document.querySelectorAll('.vc-param:checked')].map(c=>c.value);
+        let varParams = uiChecked.length ? uiChecked : vc.variant_parameters;
+        if(!varParams.length) varParams = params.map(p=>p.key);
+        
+        // Also save them to server so they persist
+        if(uiChecked.length) {
+            vc.variant_parameters = uiChecked;
+            vc.use_variants = true;
+            await API(`/api/cfg/produse/${pid}/variante`, {method:'PUT', body:vc});
+        }
+        
+        const prod = this.data.find(p=>p.id===pid);
+        const codBaza = prod ? prod.cod : '';
+        const isEdit = variant !== null;
+        const v = variant || {suffix:'.', combination:{}, pret:0};
+
+        document.getElementById('modalTitle').textContent = isEdit ? 'Editează Variantă' : 'Adaugă Variantă';
+        let html = `<div class="mb-3"><label class="form-label fw-bold">Sufix Cod</label>
+            <div class="input-group"><span class="input-group-text">${codBaza}</span>
+            <input id="vr-suffix" class="form-control" value="${v.suffix}"></div>
+            <small class="text-muted">Ex: .6010A, .EI60-12X-RAL9010</small></div>
+            <h6 class="fw-bold">Parametri:</h6>`;
+        params.filter(p => varParams.includes(p.key)).forEach(p => {
+            let inputHtml = '';
+            if(p.type === 'dimension'){
+                const dims = p.predefined_dimensions||[];
+                const opts = dims.map(d => `<option ${v.combination[p.key]===d.value?'selected':''}>${d.value}</option>`).join('');
+                inputHtml = `<select id="vr-${p.key}" class="form-select"><option value="">--</option>${opts}</select>`;
+            } else if(p.values && p.values.length){
+                const vals = p.values.map(x => typeof x==='object'?x.label:x);
+                const opts = vals.map(val => `<option ${v.combination[p.key]===val?'selected':''}>${val}</option>`).join('');
+                inputHtml = `<select id="vr-${p.key}" class="form-select"><option value="">--</option>${opts}</select>`;
+            } else {
+                inputHtml = `<input id="vr-${p.key}" class="form-control" value="${v.combination[p.key]||''}">`;
+            }
+            html += `<div class="mb-2"><label class="form-label">${p.name}</label>${inputHtml}</div>`;
+        });
+        html += `<div class="mb-3"><label class="form-label fw-bold">Preț (EUR)</label><input id="vr-pret" class="form-control" type="number" step="0.01" value="${v.pret}"></div>`;
+        
+        document.getElementById('modalBody').innerHTML = html;
+        document.getElementById('modalSave').onclick = async () => {
+            const combo = {};
+            params.filter(p=>varParams.includes(p.key)).forEach(p => {
+                combo[p.key] = document.getElementById(`vr-${p.key}`).value;
+            });
+            const newV = {suffix:document.getElementById('vr-suffix').value, combination:combo,
+                         pret:parseFloat(document.getElementById('vr-pret').value)||0};
+            if(idx>=0) vc.variants[idx]=newV; else vc.variants.push(newV);
+            await API(`/api/cfg/produse/${pid}/variante`, {method:'PUT', body:vc});
+            modal.hide(); setTimeout(()=>this.openVariants(pid), 300);
+        };
+        modal.show();
+    },
+    async saveVariants(pid) {
+        const vc = await API(`/api/cfg/produse/${pid}/variante`);
+        vc.use_variants = document.getElementById('vc-use').checked;
+        vc.variant_parameters = [...document.querySelectorAll('.vc-param:checked')].map(c=>c.value);
+        await API(`/api/cfg/produse/${pid}/variante`, {method:'PUT', body:vc});
+        alert('Salvat!');
+    }
+};
+
+// ═══════════════════════════════════════
+// ACCESORII
+// ═══════════════════════════════════════
+const accesorii = {
+    data: [], sel: -1,
+    async load() {
+        this.data = await API('/api/cfg/accesorii');
+        const tb = document.getElementById('accesorii-body');
+        tb.innerHTML = this.data.map((a,i) => {
+            let pretDisplay = a.pret_mode==='completabil' ? '[custom]' : (a.pret_mode==='mixt' ? a.pret.toFixed(2)+'~' : a.pret.toFixed(2));
+            return `<tr data-idx="${i}"><td>${i+1}</td><td class="fw-bold">${a.cod}</td><td>${a.denumire}</td>
+            <td>${a.tip}</td><td>${a.pret_mode}</td><td>${pretDisplay}</td><td>${a.um}</td></tr>`;
+        }).join('');
+        setupTable('accesorii-body', this.data, i => this.sel = i);
+    },
+    add() { this.showDialog(null); },
+    edit() { if(this.sel<0) return alert('Selectează!'); this.showDialog(this.data[this.sel]); },
+    async del() {
+        if(this.sel<0) return alert('Selectează!');
+        if(!confirm('Sigur?')) return;
+        await API(`/api/cfg/accesorii/${this.data[this.sel].id}`, {method:'DELETE'});
+        this.sel=-1; this.load();
+    },
+    async showDialog(a) {
+        const allProds = await API('/api/cfg/produse');
+        const catAccList = await API('/api/cfg/categorii-accesorii');
+        const isEdit = !!a;
+        document.getElementById('modalTitle').textContent = isEdit ? 'Editează Accesoriu' : 'Adaugă Accesoriu/Opțiune';
+        // Build compatibility map: produs_id -> status
+        const compatMap = {};
+        if(a && a.compatibilitati) {
+            a.compatibilitati.forEach(c => { compatMap[c.produs_id] = c.status; });
+        }
+        
+        let html = `<div class="row">
+            <div class="col-md-4 mb-3"><label class="form-label">Tip</label><select id="a-tip" class="form-select" onchange="accesorii._tipChange()">
+                <option value="accesoriu" ${a&&a.tip==='accesoriu'?'selected':''}>Accesoriu</option>
+                <option value="optiune" ${a&&a.tip==='optiune'?'selected':''}>Opțiune</option></select>
+                <small class="text-muted">Accesoriu=fizic | Opțiune=serviciu</small></div>
+            <div class="col-md-4 mb-3" id="a-cat-wrap"><label class="form-label">Categorie</label>
+                <select id="a-cat" class="form-select"><option value="">--</option>
+                ${catAccList.map(c=>`<option value="${c.id}" ${a&&a.categorie_id===c.id?'selected':''}>${c.nume}</option>`).join('')}</select></div>
+            <div class="col-md-4 mb-3"><label class="form-label">UM</label><select id="a-um" class="form-select">
+                ${['buc','mp','ml','set'].map(u=>`<option ${a&&a.um===u?'selected':''}>${u}</option>`).join('')}</select></div>
+            </div>
+            <div class="row">
+            <div class="col-md-6 mb-3"><label class="form-label">Cod</label><input id="a-cod" class="form-control" value="${a?a.cod:''}"></div>
+            <div class="col-md-6 mb-3"><label class="form-label">Denumire</label><input id="a-den" class="form-control" value="${a?a.denumire:''}"></div>
+            </div>
+            <div class="mb-3"><label class="form-label">Descriere</label><textarea id="a-desc" class="form-control" rows="2">${a?a.descriere||'':''}</textarea></div>
+            <hr>
+            <h6 class="fw-bold">MOD PREȚ</h6>
+            <div class="row">
+            <div class="col-md-4 mb-3"><label class="form-label">Mod Preț</label><select id="a-pmode" class="form-select" onchange="accesorii._pretModeChange()">
+                <option value="fix" ${a&&a.pret_mode==='fix'?'selected':''}>Fix</option>
+                <option value="mixt" ${a&&a.pret_mode==='mixt'?'selected':''}>Mixt</option>
+                <option value="completabil" ${a&&a.pret_mode==='completabil'?'selected':''}>Completabil</option></select></div>
+            <div class="col-md-4 mb-3"><label class="form-label">Preț Implicit (EUR)</label><input id="a-pret" class="form-control" type="number" step="0.01" value="${a?a.pret:0}"></div>
+            </div>
+            <div class="form-check mb-3"><input class="form-check-input" type="checkbox" id="a-standalone" ${!a||a.poate_standalone!==false?'checked':''}>
+            <label class="form-check-label">Poate fi vândut standalone</label></div>
+            <hr>
+            <h6 class="fw-bold">COMPATIBILITATE PRODUSE</h6>
+            <div style="max-height:200px;overflow-y:auto">`;
+        allProds.forEach(p => {
+            const isCompat = p.id in compatMap;
+            const st = compatMap[p.id] || 'optional';
+            html += `<div class="d-flex align-items-center gap-2 py-1 border-bottom">
+                <input class="form-check-input a-compat-check" type="checkbox" data-pid="${p.id}" ${isCompat?'checked':''}>
+                <span class="flex-grow-1">${p.cod} - ${p.denumire.substring(0,40)}</span>
+                <select class="form-select form-select-sm a-compat-status" data-pid="${p.id}" style="width:120px" ${!isCompat?'disabled':''}>
+                    <option value="standard" ${st==='standard'?'selected':''}>Standard</option>
+                    <option value="optional" ${st==='optional'?'selected':''}>Optional</option></select></div>`;
+        });
+        html += `</div><small class="text-muted">Standard = inclus | Optional = contra cost</small>`;
+        
+        document.getElementById('modalBody').innerHTML = html;
+        document.querySelectorAll('.a-compat-check').forEach(cb => {
+            cb.addEventListener('change', function() {
+                const sel = document.querySelector(`.a-compat-status[data-pid="${this.dataset.pid}"]`);
+                sel.disabled = !this.checked;
+            });
+        });
+        
+        document.getElementById('modalSave').onclick = async () => {
+            const compatibilitati = [];
+            document.querySelectorAll('.a-compat-check:checked').forEach(cb => {
+                const st = document.querySelector(`.a-compat-status[data-pid="${cb.dataset.pid}"]`).value;
+                compatibilitati.push({produs_id: parseInt(cb.dataset.pid), status: st});
+            });
+            const data = {cod:document.getElementById('a-cod').value, denumire:document.getElementById('a-den').value,
+                descriere:document.getElementById('a-desc').value, tip:document.getElementById('a-tip').value,
+                pret_mode:document.getElementById('a-pmode').value, pret:parseFloat(document.getElementById('a-pret').value)||0,
+                um:document.getElementById('a-um').value, poate_standalone:document.getElementById('a-standalone').checked,
+                categorie_id:parseInt(document.getElementById('a-cat').value)||null,
+                compatibilitati: compatibilitati};
+            if(isEdit) await API(`/api/cfg/accesorii/${a.id}`,{method:'PUT',body:data});
+            else await API('/api/cfg/accesorii',{method:'POST',body:data});
+            modal.hide(); this.sel=-1; this.load();
+        };
+        this._tipChange(); this._pretModeChange();
+        modal.show();
+    },
+    _tipChange() {
+        document.getElementById('a-cat-wrap').style.display = document.getElementById('a-tip').value==='accesoriu'?'':'none';
+    },
+    _pretModeChange() {
+        document.getElementById('a-pret').disabled = document.getElementById('a-pmode').value === 'completabil';
+    }
+};
+
+// ═══════════════════════════════════════
+// CATEGORII HELPER (shared for acc & prod)
+// ═══════════════════════════════════════
+function makeCatManager(apiUrl, tbodyId, fields) {
+    return {
+        data: [], sel: -1,
+        async load() {
+            this.data = await API(apiUrl);
+            const tb = document.getElementById(tbodyId);
+            tb.innerHTML = this.data.map((c,i) => `<tr data-idx="${i}" onclick="this.parentElement.querySelectorAll('tr').forEach(r=>r.classList.remove('selected'));this.classList.add('selected')">
+                <td>${c.ordine}</td><td class="fw-bold">${c.nume}</td><td>${c.descriere||''}</td>
+                <td>${c[fields.count]||0}</td></tr>`).join('');
+            this.sel = -1;
+            document.querySelectorAll(`#${tbodyId} tr`).forEach((tr,i) => tr.addEventListener('click', () => this.sel = i));
+        },
+        add() {
+            document.getElementById('modalTitle').textContent = 'Adaugă Categorie';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="mb-3"><label class="form-label">Nume</label><input id="cat-name" class="form-control"></div>
+                <div class="mb-3"><label class="form-label">Descriere</label><textarea id="cat-desc" class="form-control" rows="3"></textarea></div>`;
+            document.getElementById('modalSave').onclick = async () => {
+                await API(apiUrl, {method:'POST', body:{nume:document.getElementById('cat-name').value, descriere:document.getElementById('cat-desc').value}});
+                modal.hide(); this.load();
+            };
+            modal.show();
+        },
+        edit() {
+            if(this.sel<0) return alert('Selectează!');
+            const c = this.data[this.sel];
+            document.getElementById('modalTitle').textContent = 'Editează Categorie';
+            document.getElementById('modalBody').innerHTML = `
+                <div class="mb-3"><label class="form-label">Nume</label><input id="cat-name" class="form-control" value="${c.nume}"></div>
+                <div class="mb-3"><label class="form-label">Descriere</label><textarea id="cat-desc" class="form-control" rows="3">${c.descriere||''}</textarea></div>`;
+            document.getElementById('modalSave').onclick = async () => {
+                await API(`${apiUrl}/${c.id}`, {method:'PUT', body:{nume:document.getElementById('cat-name').value, descriere:document.getElementById('cat-desc').value}});
+                modal.hide(); this.load();
+            };
+            modal.show();
+        },
+        async del() {
+            if(this.sel<0) return alert('Selectează!');
+            if(!confirm('Sigur?')) return;
+            const res = await API(`${apiUrl}/${this.data[this.sel].id}`, {method:'DELETE'});
+            if(!res.success) alert(res.error); 
+            this.sel=-1; this.load();
+        },
+        async move(dir) {
+            if(this.sel<0) return alert('Selectează!');
+            const newIdx = this.sel + dir;
+            if(newIdx < 0 || newIdx >= this.data.length) return;
+            const order = this.data.map((c,i) => ({id:c.id, ordine:i}));
+            [order[this.sel], order[newIdx]] = [order[newIdx], order[this.sel]];
+            order.forEach((o,i) => o.ordine = i);
+            await API(`${apiUrl}/reorder`, {method:'POST', body:{order}});
+            this.sel = newIdx; this.load();
+        }
+    };
+}
+const catAcc = makeCatManager('/api/cfg/categorii-accesorii', 'cat-acc-body', {count:'nr_accesorii'});
+const catProd = makeCatManager('/api/cfg/categorii-produse', 'cat-prod-body', {count:'nr_produse'});
+
+// ═══════════════════════════════════════
+// SETARI
+// ═══════════════════════════════════════
+const setari = {
+    async load() {
+        const s = await API('/api/setari');
+        document.getElementById('set-name').value = s.company_name||'';
+        document.getElementById('set-addr').value = s.company_address||'';
+        document.getElementById('set-phone').value = s.company_phone||'';
+        document.getElementById('set-email').value = s.company_email||'';
+        document.getElementById('set-tva').value = s.tva_rate||'19';
+    },
+    async save() {
+        await API('/api/setari', {method:'PUT', body:{
+            company_name:document.getElementById('set-name').value,
+            company_address:document.getElementById('set-addr').value,
+            company_phone:document.getElementById('set-phone').value,
+            company_email:document.getElementById('set-email').value,
+            tva_rate:document.getElementById('set-tva').value
+        }});
+        alert('Setări salvate!');
+    }
+};
+</script>
+{% endblock %}

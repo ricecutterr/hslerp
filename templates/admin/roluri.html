@@ -1,0 +1,50 @@
+{% extends 'admin/layout.html' %}
+{% block title %}Roluri - HSL ERP{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <h2><i class="bi bi-shield-lock me-2"></i>Roluri</h2>
+    <a href="/admin/roluri/nou" class="btn btn-hsl"><i class="bi bi-plus-lg me-2"></i>Rol Nou</a>
+</div>
+<div class="row g-4">
+{% for r in roluri %}
+<div class="col-md-6 col-lg-4">
+    <div class="bg-white rounded-3 p-3 h-100" style="border-left:4px solid {% if r.is_system %}#dc3545{% else %}#61993B{% endif %}">
+        <div class="d-flex justify-content-between align-items-start mb-2">
+            <div>
+                <h5 class="mb-0 fw-bold">{{ r.nume }}</h5>
+                <small class="text-muted">{{ r.descriere or '' }}</small>
+            </div>
+            <div class="d-flex gap-1">
+                {% if r.is_system %}
+                <span class="badge bg-danger">SISTEM</span>
+                {% else %}
+                <a href="/admin/roluri/{{ r.id }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                <form method="POST" action="/admin/roluri/{{ r.id }}/sterge" style="display:inline" onsubmit="return confirm('Sigur?')">
+                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+        <div class="mb-2">
+            <span class="badge bg-{{ 'warning text-dark' if r.doar_proprii else 'success' }}">
+                {{ 'Doar documentele proprii' if r.doar_proprii else 'Vede toate documentele' }}
+            </span>
+            <span class="badge bg-secondary">{{ r.utilizatori.count() }} utilizatori</span>
+        </div>
+        <div>
+            {% if r.is_system %}
+            <small class="text-success"><i class="bi bi-check-circle me-1"></i>Acces complet la toate modulele</small>
+            {% else %}
+            {% set perms = r.get_permisiuni() %}
+            {% for key, label, icon in MODULES %}
+            <span class="badge bg-{{ 'success' if perms.get(key) else 'light text-muted' }} me-1 mb-1" style="font-size:.75rem">
+                <i class="bi {{ icon }} me-1"></i>{{ label.split(' (')[0] }}
+            </span>
+            {% endfor %}
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endfor %}
+</div>
+{% endblock %}

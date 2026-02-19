@@ -1,0 +1,54 @@
+{% extends 'admin/layout.html' %}
+{% block title %}{{ 'Editare Rol' if rol else 'Rol Nou' }} - HSL ERP{% endblock %}
+{% block content %}
+<div class="page-header">
+    <h2><i class="bi bi-shield-lock me-2"></i>{{ 'Editare Rol' if rol else 'Rol Nou' }}</h2>
+</div>
+<div class="bg-white rounded-3 p-4" style="max-width:700px">
+<form method="POST">
+    <div class="row g-3">
+    <div class="col-md-6">
+        <label class="form-label fw-bold">Nume Rol *</label>
+        <input type="text" name="nume" class="form-control" value="{{ rol.nume if rol else '' }}" required placeholder="ex: Agent Vânzări, Manager, Producție">
+    </div>
+    <div class="col-md-6">
+        <label class="form-label">Descriere</label>
+        <input type="text" name="descriere" class="form-control" value="{{ rol.descriere if rol else '' }}" placeholder="Descriere scurtă a rolului">
+    </div>
+    </div>
+
+    <hr class="my-4">
+    <h5 class="fw-bold mb-3"><i class="bi bi-key me-2"></i>Permisiuni Module</h5>
+    <p class="text-muted small mb-3">Bifează modulele la care acest rol are acces:</p>
+
+    <div class="row g-2">
+    {% set perms = rol.get_permisiuni() if rol else {} %}
+    {% for key, label, icon in MODULES %}
+    <div class="col-md-6">
+        <div class="form-check p-3 rounded border {% if perms.get(key) %}border-success bg-success bg-opacity-10{% endif %}">
+            <input class="form-check-input" type="checkbox" name="{{ key }}" id="perm-{{ key }}" {{ 'checked' if perms.get(key) }}>
+            <label class="form-check-label fw-bold" for="perm-{{ key }}">
+                <i class="bi {{ icon }} me-1"></i>{{ label }}
+            </label>
+        </div>
+    </div>
+    {% endfor %}
+    </div>
+
+    <hr class="my-4">
+    <h5 class="fw-bold mb-3"><i class="bi bi-eye me-2"></i>Vizibilitate Documente</h5>
+    <div class="form-check p-3 rounded border">
+        <input class="form-check-input" type="checkbox" name="doar_proprii" id="doar_proprii" {{ 'checked' if not rol or rol.doar_proprii }}>
+        <label class="form-check-label" for="doar_proprii">
+            <strong>Doar documentele proprii</strong>
+            <br><small class="text-muted">Dacă bifat, utilizatorul vede doar ofertele/comenzile create de el. Debifat = vede tot.</small>
+        </label>
+    </div>
+
+    <div class="mt-4">
+        <button class="btn btn-hsl me-2"><i class="bi bi-check-lg me-1"></i>{{ 'Salvează' if rol else 'Creează Rol' }}</button>
+        <a href="/admin/roluri" class="btn btn-outline-secondary">Anulează</a>
+    </div>
+</form>
+</div>
+{% endblock %}

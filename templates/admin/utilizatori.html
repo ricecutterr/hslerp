@@ -1,0 +1,41 @@
+{% extends 'admin/layout.html' %}
+{% block title %}Utilizatori - HSL ERP{% endblock %}
+{% block content %}
+<div class="page-header d-flex justify-content-between align-items-center">
+    <h2><i class="bi bi-person-gear me-2"></i>Utilizatori</h2>
+    <div class="d-flex gap-2">
+        <a href="/admin/roluri" class="btn btn-outline-secondary"><i class="bi bi-shield-lock me-2"></i>Roluri</a>
+        <a href="/admin/utilizatori/nou" class="btn btn-hsl"><i class="bi bi-plus-lg me-2"></i>Utilizator Nou</a>
+    </div>
+</div>
+<div class="bg-white rounded-3 p-3">
+    <table class="table table-hsl table-hover">
+    <thead><tr><th>Nume</th><th>Username</th><th>Email</th><th>Telefon</th><th>Rol</th><th>Vizibilitate</th><th>Status</th><th></th></tr></thead>
+    <tbody>
+    {% for u in utilizatori %}
+    <tr>
+        <td class="fw-bold">{{ u.nume_complet }}</td>
+        <td><code>{{ u.username }}</code></td>
+        <td>{{ u.email or '-' }}</td>
+        <td>{{ u.telefon or '-' }}</td>
+        <td>
+            {% if u.rol_obj %}
+            <span class="badge bg-{% if u.is_admin %}danger{% else %}info{% endif %}">{{ u.rol_obj.nume }}</span>
+            {% else %}
+            <span class="badge bg-secondary">Fără rol</span>
+            {% endif %}
+        </td>
+        <td>
+            {% if u.rol_obj %}
+            <small class="text-{{ 'success' if not u.doar_proprii else 'warning' }}">
+                {{ 'Toate' if not u.doar_proprii else 'Doar proprii' }}
+            </small>
+            {% else %}-{% endif %}
+        </td>
+        <td>{% if u.activ %}<span class="badge bg-success">Activ</span>{% else %}<span class="badge bg-secondary">Inactiv</span>{% endif %}</td>
+        <td><a href="/admin/utilizatori/{{ u.id }}" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a></td>
+    </tr>
+    {% endfor %}
+    </tbody></table>
+</div>
+{% endblock %}
